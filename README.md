@@ -1,36 +1,70 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🧬 FoldScout
 
-## Getting Started
+**AI-powered structural review for the AlphaFold era.**
 
-First, run the development server:
+From PDB ID or UniProt ID to expert-level structural insight in 30 seconds.
+
+> Submitted to **Genspark Hackathon 2026** · Category: **Agent & Automation (Research Agent)**
+
+---
+
+## ✨ What it does
+
+1. Paste a **UniProt ID** (e.g. `P04637`) or **PDB ID** (e.g. `1TUP`)
+2. FoldScout fetches the structure from **AlphaFold DB** or **RCSB PDB**
+3. It parses **per-residue pLDDT**, identifies confidence regions, and renders the structure in 3D (pLDDT-colored)
+4. **Gemini** generates an expert-level structural report: overview, confidence assessment, functional hypotheses, caveats, and suggested next steps
+
+The whole flow is < 30 seconds.
+
+## 🎯 Why this matters
+
+After AlphaFold, the bottleneck shifted from *predicting* structures to *interpreting* them. Every structural biologist still opens PyMOL, manually colors by B-factor, scrolls through pLDDT plots, and writes their own quick assessment. FoldScout automates that first-pass review so researchers can focus on the science.
+
+## 🚀 Quickstart
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cd foldscout
+cp .env.local.example .env.local       # add your GEMINI_API_KEY
+npm install
+PORT=3737 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3737
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Demo presets
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Preset | UniProt | Why |
+|---|---|---|
+| 🔴 TP53 | `P04637` | Cancer-related, mixed disorder/structure |
+| 🟢 GFP | `P42212` | Iconic, visually beautiful β-barrel |
+| 🦠 SARS-CoV-2 Spike | `P0DTC2` | Pandemic relevance, large multidomain |
 
-## Learn More
+## 🛠 Stack
 
-To learn more about Next.js, take a look at the following resources:
+- **Next.js 16** (App Router, Turbopack)
+- **3Dmol.js** for fast WebGL structure rendering with pLDDT coloring
+- **Recharts** for per-residue confidence plots
+- **AlphaFold DB API** + **RCSB PDB API** for structures
+- **Google Gemini** (`gemini-2.0-flash-exp`) for the structural report
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 📁 Project layout
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+foldscout/
+├── app/
+│   ├── page.tsx              # Main UI
+│   ├── api/analyze/route.ts  # Fetches structure + parses pLDDT
+│   └── api/report/route.ts   # Calls Gemini for the AI report
+├── components/
+│   ├── MolViewer.tsx         # 3Dmol.js wrapper
+│   └── PlddtChart.tsx        # Recharts plot
+└── lib/
+    └── alphafold.ts          # Parsing helpers + API calls
+```
 
-## Deploy on Vercel
+## 🧪 Built by
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+**Sehoon Park** ([@sehooni](https://github.com/sehooni)) · Post-Master Researcher @ KBSI · Structural biology + agentic AI
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Built in 90 minutes for Genspark Hackathon 2026.
