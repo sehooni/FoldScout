@@ -5,7 +5,7 @@
 From a UniProt ID, PDB ID, or raw amino acid sequence to an expert-level structural report — grounded in real database facts, not LLM guesses — in under 30 seconds.
 
 > Submitted to **Genspark Hackathon 2026** · Category: **Agent & Automation (Research Agent)**
-> Built by Sehoon Park ([@sehooni](https://github.com/sehooni)), Post-Master Researcher @ KBSI.
+> Built by Sehoon Park ([@sehooni](https://github.com/sehooni))
 
 ---
 
@@ -13,10 +13,10 @@ From a UniProt ID, PDB ID, or raw amino acid sequence to an expert-level structu
 
 The name comes from two ideas that defined the product:
 
-| Part | Meaning |
-|---|---|
-| **Fold** | Protein **folding** — a nod to **AlphaFold** and the wider structure-prediction era this tool is built for. |
-| **Scout** | A **scout** runs ahead of the army. Before a structural biologist commits to a deep workflow (PyMOL, MD, docking), FoldScout does the fast first-pass triage: confidence, domains, caveats. |
+| Part            | Meaning                                                                                                                                                                                          |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Fold**  | Protein**folding** — a nod to **AlphaFold** and the wider structure-prediction era this tool is built for.                                                                          |
+| **Scout** | A**scout** runs ahead of the army. Before a structural biologist commits to a deep workflow (PyMOL, MD, docking), FoldScout does the fast first-pass triage: confidence, domains, caveats. |
 
 It follows the naming pattern of well-known structural biology tools like **FoldX** and **FoldSeek**, so the intent is recognizable to the target community at a glance.
 
@@ -60,19 +60,19 @@ Open http://localhost:3737
 
 ### Demo presets
 
-| Preset | UniProt | Why |
-|---|---|---|
-| 🔴 TP53 | `P04637` | Cancer-related, mixed disorder + structured core |
-| 🟢 GFP | `P42212` | Iconic β-barrel, visually beautiful |
-| 🦠 SARS-CoV-2 Spike | `P0DTC2` | Pandemic relevance, large multidomain |
+| Preset              | UniProt    | Why                                              |
+| ------------------- | ---------- | ------------------------------------------------ |
+| 🔴 TP53             | `P04637` | Cancer-related, mixed disorder + structured core |
+| 🟢 GFP              | `P42212` | Iconic β-barrel, visually beautiful             |
+| 🦠 SARS-CoV-2 Spike | `P0DTC2` | Pandemic relevance, large multidomain            |
 
 ### Sequence demo presets
 
-| Preset | Length | Notes |
-|---|---|---|
-| 🧪 Ubiquitin | 76 aa | Small, fast — ESMFold returns in seconds |
-| 💉 Insulin A+B | 51 aa | Medical relevance |
-| 🥚 Lysozyme C | 130 aa | Classic enzyme |
+| Preset         | Length | Notes                                     |
+| -------------- | ------ | ----------------------------------------- |
+| 🧪 Ubiquitin   | 76 aa  | Small, fast — ESMFold returns in seconds |
+| 💉 Insulin A+B | 51 aa  | Medical relevance                         |
+| 🥚 Lysozyme C  | 130 aa | Classic enzyme                            |
 
 ## Stack
 
