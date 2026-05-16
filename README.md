@@ -112,8 +112,7 @@ LLM-generated structural commentary is notoriously prone to invented residue num
 
 ## Built by
 
-**Sehoon Park** — Post-Master Researcher @ KBSI Biopharmaceutical Research Center
-M.S. AI, Hanyang Univ. · CASP16 Antibody/Peptide 3rd place · Gemini 3 Seoul Hackathon Top 6
+**Sehoon Park**
 
 GitHub: [@sehooni](https://github.com/sehooni)
 
