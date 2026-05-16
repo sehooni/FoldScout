@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { Search, Loader2, Sparkles, Database, AlertCircle, Type, GitCompare, Languages, ShieldCheck, Info } from "lucide-react";
+import { Search, Loader2, Sparkles, Database, AlertCircle, Type, GitCompare, Languages, ShieldCheck, Info, Download, FileText, FileJson, Atom } from "lucide-react";
 import PlddtChart from "@/components/PlddtChart";
 import type { AnalyzeResponse } from "./api/analyze/route";
 
@@ -85,6 +85,11 @@ const TXT = {
     failed: "Analysis failed",
     factsBlock: "UniProt facts used (anti-hallucination)",
     noFacts: "No UniProt mapping — report will be limited",
+    download: "Download",
+    downloadMd: "Report (Markdown)",
+    downloadPdb: "Structure (PDB)",
+    downloadJson: "Full analysis (JSON)",
+    downloadReady: "Saved",
   },
   ko: {
     tagline: "구조에서 인사이트까지, 30초.",
@@ -118,6 +123,11 @@ const TXT = {
     failed: "분석 실패",
     factsBlock: "UniProt fact 활용 (할루시네이션 방지)",
     noFacts: "UniProt 매핑 없음 — 리포트가 제한됨",
+    download: "다운로드",
+    downloadMd: "리포트 (Markdown)",
+    downloadPdb: "구조 파일 (PDB)",
+    downloadJson: "전체 분석 (JSON)",
+    downloadReady: "저장 완료",
   },
 };
 
@@ -431,8 +441,8 @@ export default function Home() {
         {/* Single or compare */}
         {slotA.result && (
           <div className={`grid gap-6 ${compareOpen && slotB.result ? "grid-cols-1 xl:grid-cols-2" : "grid-cols-1"}`}>
-            <ProteinPanel slot={slotA} t={t} colorMode={colorMode} />
-            {compareOpen && slotB.result && <ProteinPanel slot={slotB} t={t} colorMode={colorMode} compareTone />}
+            <ProteinPanel slot={slotA} t={t} colorMode={colorMode} lang={lang} />
+            {compareOpen && slotB.result && <ProteinPanel slot={slotB} t={t} colorMode={colorMode} compareTone lang={lang} />}
           </div>
         )}
 
@@ -444,8 +454,101 @@ export default function Home() {
   );
 }
 
-function ProteinPanel({ slot, t, colorMode, compareTone }: { slot: Slot; t: typeof TXT["en"]; colorMode: ColorMode; compareTone?: boolean }) {
+function triggerDownload(filename: string, content: string, mime: string) {
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => {
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, 0);
+}
+
+function sanitizeFilename(s: string): string {
+  return s.replace(/[^a-zA-Z0-9._-]+/g, "_").replace(/_+/g, "_").slice(0, 60) || "foldscout";
+}
+
+function buildMarkdownReport(r: AnalyzeResponse, report: string | null, lang: Lang): string {
+  const lines: string[] = [];
+  const isKo = lang === "ko";
+  lines.push(`# FoldScout — ${r.info.proteinName || r.info.id}`);
+  lines.push("");
+  lines.push(`> ${isKo ? "Grounded 구조 검토 리포트" : "Grounded structural review report"} · ${new Date().toISOString()}`);
+  lines.push("");
+  lines.push(`## ${isKo ? "구조 정보" : "Structure info"}`);
+  lines.push(`- ${isKo ? "출처" : "Source"}: ${r.info.source.toUpperCase()}`);
+  lines.push(`- ID: \`${r.info.id}\``);
+  if (r.info.uniprotId) lines.push(`- UniProt: \`${r.info.uniprotId}\``);
+  if (r.info.organism) lines.push(`- ${isKo ? "생물종" : "Organism"}: ${r.info.organism}`);
+  if (r.info.length) lines.push(`- ${isKo ? "길이" : "Length"}: ${r.info.length} aa`);
+  if (r.plddt) {
+    lines.push("");
+    lines.push(`## ${isKo ? "신뢰도 (pLDDT)" : "Confidence (pLDDT)"}`);
+    lines.push(`- ${isKo ? "평균" : "Mean"}: ${r.plddt.mean.toFixed(2)}`);
+    lines.push(`- ${isKo ? "매우 높음" : "Very high"} (≥90): ${r.plddt.bins.veryHigh}`);
+    lines.push(`- ${isKo ? "높음" : "High"} (70-90): ${r.plddt.bins.high}`);
+    lines.push(`- ${isKo ? "낮음" : "Low"} (50-70): ${r.plddt.bins.low}`);
+    lines.push(`- ${isKo ? "매우 낮음" : "Very low"} (<50): ${r.plddt.bins.veryLow}`);
+  }
+  if (r.regions && r.regions.length > 0) {
+    lines.push("");
+    lines.push(`## ${isKo ? "주요 신뢰도 영역" : "Notable confidence regions"}`);
+    for (const reg of r.regions) {
+      lines.push(`- ${reg.start}-${reg.end} (${reg.end - reg.start + 1} aa) — ${reg.category} (mean pLDDT ${reg.meanPlddt.toFixed(1)})`);
+    }
+  }
+  if (r.facts && r.facts.features.length > 0) {
+    lines.push("");
+    lines.push(`## ${isKo ? "UniProt Ground Truth Features" : "UniProt ground-truth features"}`);
+    for (const f of r.facts.features) {
+      lines.push(`- **${f.type}** ${f.start}-${f.end}${f.description ? ` — ${f.description}` : ""}`);
+    }
+  }
+  lines.push("");
+  lines.push(`## ${isKo ? "AI 구조 리포트 (Gemini 2.5, temperature 0.2)" : "AI structural report (Gemini 2.5, temperature 0.2)"}`);
+  lines.push("");
+  lines.push(report ?? `_${isKo ? "리포트 없음" : "No report available"}_`);
+  lines.push("");
+  lines.push("---");
+  lines.push(`_${isKo ? "FoldScout으로 생성됨" : "Generated by FoldScout"} · https://github.com/sehooni/FoldScout_`);
+  return lines.join("\n");
+}
+
+function ProteinPanel({ slot, t, colorMode, compareTone, lang }: { slot: Slot; t: typeof TXT["en"]; colorMode: ColorMode; compareTone?: boolean; lang: Lang }) {
   const r = slot.result!;
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const baseName = sanitizeFilename(`foldscout_${r.info.id || "protein"}`);
+
+  function downloadMarkdown() {
+    triggerDownload(`${baseName}.md`, buildMarkdownReport(r, slot.report, lang), "text/markdown;charset=utf-8");
+    setMenuOpen(false);
+  }
+  function downloadPdb() {
+    if (!r.pdbText) return;
+    triggerDownload(`${baseName}.pdb`, r.pdbText, "chemical/x-pdb");
+    setMenuOpen(false);
+  }
+  function downloadJson() {
+    const payload = {
+      generatedAt: new Date().toISOString(),
+      lang,
+      info: r.info,
+      plddt: r.plddt,
+      regions: r.regions,
+      facts: r.facts,
+      alphaMissense: r.alphaMissense,
+      report: slot.report,
+      tool: { name: "FoldScout", url: "https://github.com/sehooni/FoldScout", model: "gemini-2.5-flash", temperature: 0.2 },
+    };
+    triggerDownload(`${baseName}.json`, JSON.stringify(payload, null, 2), "application/json");
+    setMenuOpen(false);
+  }
+
   return (
     <div className={`space-y-4 ${compareTone ? "border-l-2 border-violet-700/40 pl-4" : ""}`}>
       <div className="rounded-xl border border-slate-800 bg-slate-900/40 overflow-hidden">
@@ -464,12 +567,56 @@ function ProteinPanel({ slot, t, colorMode, compareTone }: { slot: Slot; t: type
               )}
             </p>
           </div>
-          {r.plddt && (
-            <div className="text-right">
-              <div className="text-[10px] text-slate-400 uppercase tracking-wider">{t.meanPlddt}</div>
-              <div className="text-lg font-bold text-cyan-300">{r.plddt.mean.toFixed(1)}</div>
+          <div className="flex items-center gap-3">
+            {r.plddt && (
+              <div className="text-right">
+                <div className="text-[10px] text-slate-400 uppercase tracking-wider">{t.meanPlddt}</div>
+                <div className="text-lg font-bold text-cyan-300">{r.plddt.mean.toFixed(1)}</div>
+              </div>
+            )}
+            <div className="relative">
+              <button
+                onClick={() => setMenuOpen(!menuOpen)}
+                disabled={!r.pdbText}
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/40 text-cyan-200 text-xs font-medium disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <Download className="w-3.5 h-3.5" />
+                {t.download}
+              </button>
+              {menuOpen && (
+                <>
+                  <button
+                    onClick={() => setMenuOpen(false)}
+                    className="fixed inset-0 z-30 cursor-default"
+                    aria-label="close menu"
+                  />
+                  <div className="absolute right-0 top-full mt-1 z-40 min-w-[220px] rounded-lg bg-slate-900 border border-slate-700 shadow-xl overflow-hidden">
+                    <button onClick={downloadMarkdown} disabled={!slot.report} className="w-full px-3 py-2.5 text-left text-xs hover:bg-slate-800 flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed">
+                      <FileText className="w-3.5 h-3.5 text-violet-300" />
+                      <div>
+                        <div className="text-slate-100 font-medium">{t.downloadMd}</div>
+                        <div className="text-[10px] text-slate-500">.md · {(buildMarkdownReport(r, slot.report, lang).length / 1024).toFixed(1)} KB</div>
+                      </div>
+                    </button>
+                    <button onClick={downloadPdb} className="w-full px-3 py-2.5 text-left text-xs hover:bg-slate-800 flex items-center gap-2 border-t border-slate-800">
+                      <Atom className="w-3.5 h-3.5 text-cyan-300" />
+                      <div>
+                        <div className="text-slate-100 font-medium">{t.downloadPdb}</div>
+                        <div className="text-[10px] text-slate-500">.pdb · {(r.pdbText.length / 1024).toFixed(1)} KB</div>
+                      </div>
+                    </button>
+                    <button onClick={downloadJson} className="w-full px-3 py-2.5 text-left text-xs hover:bg-slate-800 flex items-center gap-2 border-t border-slate-800">
+                      <FileJson className="w-3.5 h-3.5 text-emerald-300" />
+                      <div>
+                        <div className="text-slate-100 font-medium">{t.downloadJson}</div>
+                        <div className="text-[10px] text-slate-500">.json · full record</div>
+                      </div>
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
-          )}
+          </div>
         </div>
         <div className="h-[380px] bg-black">
           <MolViewer pdbText={r.pdbText} colorMode={colorMode} amPerResidue={r.alphaMissense} />

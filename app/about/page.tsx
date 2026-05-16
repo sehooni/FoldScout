@@ -50,6 +50,7 @@ const CONTENT = {
       { icon: "Eye", title: "Three coloring modes", body: "pLDDT (confidence), Spectrum (N→C), AlphaMissense (per-residue pathogenicity)." },
       { icon: "GitCompare", title: "Side-by-side compare", body: "Analyze two proteins in parallel — pLDDT, structure, AI report all visible at once." },
       { icon: "Languages", title: "Korean / English toggle", body: "Switch language and the report regenerates automatically." },
+      { icon: "Sparkles", title: "Export reports", body: "Download as Markdown (report), PDB (structure), or JSON (full analysis record including UniProt facts and AlphaMissense scores)." },
     ],
     howTitle: "How to use it",
     howSteps: [
@@ -126,6 +127,7 @@ const CONTENT = {
       { icon: "Eye", title: "세 가지 컬러링 모드", body: "pLDDT(신뢰도), Spectrum(N→C), AlphaMissense(잔기별 병원성)." },
       { icon: "GitCompare", title: "병렬 비교 모드", body: "두 단백질을 나란히 분석 — pLDDT, 구조, AI 리포트를 동시에 표시." },
       { icon: "Languages", title: "한국어 / English 토글", body: "언어를 전환하면 리포트가 자동으로 재생성됩니다." },
+      { icon: "Sparkles", title: "리포트 내보내기", body: "Markdown(리포트), PDB(구조), JSON(UniProt facts와 AlphaMissense 점수를 포함한 전체 분석 기록)으로 다운로드 가능." },
     ],
     howTitle: "사용 방법",
     howSteps: [
