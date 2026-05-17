@@ -40,3 +40,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 .env.local
+
+FoldScout.mov
+FoldScout.mp4
+.venv_whisper/
+ffmpeg.zip
